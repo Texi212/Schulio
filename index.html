@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schul-Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #060813;
+  --surface: rgba(17, 20, 36, 0.7);
+  --card: rgba(22, 26, 46, 0.65);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --a1: #4f8ef7; --a2: #8b5cf6; --a3: #06b6d4; --a4: #10b981;
+  --gold: #f59e0b; --text: #f1f3f9; --muted: #828ba9; --radius: 24px;
+  --font-head: 'Syne', sans-serif; --font-body: 'Plus Jakarta Sans', sans-serif;
+  --shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+}
+
+/* ── PRESETS FÜR FARBSCHEMATA ── */
+body.scheme-cyber { --a1: #ff007f; --a2: #9d00ff; --a3: #00f0ff; --a4: #ffaa00; }
+body.scheme-ocean { --a1: #0284c7; --a2: #06b6d4; --a3: #3b82f6; --a4: #14b8a6; }
+body.scheme-sunset { --a1: #f97316; --a2: #ec4899; --a3: #e11d48; --a4: #eab308; }
+
+/* ── HELLER MODUS (LIGHT MODE) ── */
+body.light-mode {
+  --bg: #f4f6fa;
+  --surface: rgba(255, 255, 255, 0.65);
+  --card: rgba(255, 255, 255, 0.85);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.16);
+  --text: #161925;
+  --muted: #647095;
+  --shadow: 0 20px 40px -15px rgba(15, 20, 40, 0.06);
+}
+body.light-mode::before {
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.015) 1px, transparent 1px);
+}
+body.light-mode .calc-display, 
+body.light-mode .timer-face, 
+body.light-mode .hw-add input, 
+body.light-mode .note-area,
+body.light-mode .input-group input,
+body.light-mode .input-group select { 
+  background: #eaedf4; 
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.06); 
+}
+body.light-mode .calc-val { color: var(--text); }
+body.light-mode .cb { background: rgba(0,0,0,0.02); color: var(--text); }
+body.light-mode .cb:hover { background: rgba(0,0,0,0.06); }
+body.light-mode .cb.op { background: color-mix(in srgb, var(--a1) 8%, transparent); }
+body.light-mode .cb.clr { background: color-mix(in srgb, var(--gold) 8%, transparent); }
+
+html { scroll-behavior: smooth; background: var(--bg); }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.5;
+  transition: background-color 0.4s, color 0.4s;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: 
+    linear-gradient(rgba(79, 142, 247, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 142, 247, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px; pointer-events: none; z-index: 0;
+}
+.orb { position: fixed; border-radius: 50%; filter: blur(140px); opacity: 0.18; pointer-events: none; z-index: 0; animation: drift 25s ease-in-out infinite alternate; transition: background 0.5s; }
+body.light-mode .orb { opacity: 0.12; filter: blur(160px); }
+.o1 { width: 700px; height: 700px; background: radial-gradient(circle, var(--a2) 0%, transparent 70%); top: -250px; left: -200px; }
+.o2 { width: 600px; height: 600px; background: radial-gradient(circle, var(--a1) 0%, transparent 70%); bottom: -150px; right: -150px; animation-duration: 20s; }
+@keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(60px, 50px) scale(1.1); } }
+
+.wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* NAV BAR */
+nav { display: flex; align-items: center; justify-content: space-between; padding: 24px 0; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
+.nav-logo { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; display: flex; align-items: center; gap: 12px; }
+.nav-logo .dot { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, var(--a1), var(--a3)); box-shadow: 0 0 15px var(--a1); }
+.nav-right { display: flex; align-items: center; gap: 12px; position: relative; }
+.nav-clock { font-size: 0.85rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 8px 20px; font-weight: 500; backdrop-filter: blur(10px); }
+.nav-clock .tc { color: var(--text); font-weight: 600; margin-left: 8px; }
+
+/* SETTINGS ELEMENTE */
+.settings-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 1.1rem; transition: all 0.3s; backdrop-filter: blur(10px); }
+.settings-btn:hover { border-color: var(--border-hover); transform: rotate(45deg); background: rgba(255,255,255,0.05); }
+body.light-mode .settings-btn:hover { background: rgba(0,0,0,0.03); }
+
+.settings-panel { position: absolute; top: 52px; right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px; width: 250px; box-shadow: var(--shadow); backdrop-filter: blur(25px); display: none; flex-direction: column; gap: 14px; z-index: 100; animation: fadeUp 0.2s ease; }
+.settings-panel.show { display: flex; }
+.settings-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+.settings-group { display: flex; flex-direction: column; gap: 6px; }
+.settings-row { display: flex; gap: 6px; }
+.st-btn { flex: 1; padding: 8px 10px; font-size: 0.8rem; font-weight: 600; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; transition: all 0.2s; font-family: var(--font-body); }
+.st-btn:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.03); }
+body.light-mode .st-btn:hover { background: rgba(0,0,0,0.02); }
+.st-btn.active { background: var(--a1); color: #fff; border-color: var(--a1); box-shadow: 0 4px 12px color-mix(in srgb, var(--a1) 30%, transparent); }
+
+/* HEADER / HERO */
+header { text-align: center; padding: 20px 0 40px; }
+h1 { font-family: var(--font-head); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.04em; line-height: 1.1; margin-bottom: 24px; }
+.grad { background: linear-gradient(135deg, var(--a1) 30%, var(--a3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* TABS NAVIGATOR */
+.navigator { display: inline-flex; background: var(--surface); border: 1px solid var(--border); padding: 6px; border-radius: 20px; gap: 6px; backdrop-filter: blur(10px); box-shadow: var(--shadow); }
+.nav-tab { background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; padding: 12px 26px; border-radius: 14px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+body.light-mode .nav-tab:hover { background: rgba(0,0,0,0.03); }
+.nav-tab.active { color: #fff; background: linear-gradient(135deg, var(--a1), #2563eb); box-shadow: 0 10px 25px -5px rgba(79, 142, 247, 0.4); }
+
+/* CONTENT & SECTIONS */
+.page-content { flex: 1; margin-bottom: 50px; }
+.page { display: none; opacity: 0; transform: translateY(15px); transition: opacity 0.35s ease, transform 0.35s ease; }
+.page.active { display: block; opacity: 1; transform: translateY(0); }
+
+/* SELECTION GRIDS */
+.pcards, .tools-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+
+/* PREMIUM CARDS */
+.pcard, .menu-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 32px 28px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 20px;
+  position: relative; overflow: hidden; cursor: pointer; backdrop-filter: blur(12px);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+  box-shadow: var(--shadow);
+}
+.pcard:hover, .menu-card:hover {
+  transform: translateY(-8px); background: rgba(22, 26, 46, 0.85); border-color: var(--border-hover);
+}
+body.light-mode .pcard:hover, body.light-mode .menu-card:hover { background: #fff; }
+
+.card-1 { --c: var(--a1); --c-glow: color-mix(in srgb, var(--a1) 15%, transparent); }
+.card-2 { --c: var(--a2); --c-glow: color-mix(in srgb, var(--a2) 15%, transparent); }
+.card-3 { --c: var(--a3); --c-glow: color-mix(in srgb, var(--a3) 15%, transparent); }
+.card-4 { --c: var(--a4); --c-glow: color-mix(in srgb, var(--a4) 15%, transparent); }
+
+.pcard:hover, .menu-card:hover { 
+  border-color: var(--c); box-shadow: 0 30px 60px -15px rgba(0,0,0,0.4), 0 0 0 1px var(--c), 0 0 30px var(--c-glow);
+}
+body.light-mode .pcard:hover, body.light-mode .menu-card:hover {
+  box-shadow: 0 30px 50px -15px rgba(0,0,0,0.08), 0 0 0 1px var(--c), 0 0 20px var(--c-glow);
+}
+
+.card-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+body.light-mode .card-icon { background: rgba(0,0,0,0.01); border-color: rgba(0,0,0,0.04); }
+.pcard:hover .card-icon, .menu-card:hover .card-icon { background: color-mix(in srgb, var(--c) 12%, transparent); border-color: color-mix(in srgb, var(--c) 30%, transparent); transform: scale(1.08) rotate(3deg); }
+
+.card-title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; transition: color 0.2s; }
+.pcard:hover .card-title, .menu-card:hover .card-title { color: var(--c); }
+.card-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; flex: 1; }
+
+.card-foot { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: var(--muted); padding-top: 16px; border-top: 1px solid var(--border); font-weight: 500; transition: all 0.3s; }
+.pcard:hover .card-foot, .menu-card:hover .card-foot { color: var(--c); border-color: color-mix(in srgb, var(--c) 20%, transparent); }
+
+.arr { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: all 0.3s; }
+body.light-mode .arr { background: rgba(0,0,0,0.02); }
+.pcard:hover .arr, .menu-card:hover .arr { background: var(--c); color: #fff; transform: translateX(4px); box-shadow: 0 0 10px var(--c-glow); }
+.ptag { position: absolute; top: 16px; right: 16px; font-size: 0.65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--muted); }
+body.light-mode .ptag { background: rgba(0,0,0,0.02); }
+
+/* TOOLS VIEW CONTAINERS */
+.single-tool-container { max-width: 650px; margin: 0 auto; animation: fadeUp 0.4s ease; }
+.back-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; backdrop-filter: blur(10px); }
+.back-btn:hover { background: var(--border-hover); border-color: var(--muted); transform: translateX(-3px); }
+
+.tool-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+.tool-header { display: flex; align-items: center; gap: 14px; padding: 20px 28px; border-bottom: 1px solid var(--border); background: rgba(255, 255, 255, 0.01); }
+.tool-header .th-icon { font-size: 1.4rem; }
+.tool-header h3 { font-family: var(--font-body); font-size: 1.15rem; font-weight: 700; }
+.tool-body { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+
+/* CALCULATOR */
+.calc-display { background: #03050c; border: 1px solid var(--border); border-radius: 16px; padding: 18px 22px; text-align: right; margin-bottom: 4px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); }
+.calc-expr { font-size: 0.9rem; color: var(--muted); min-height: 20px; letter-spacing: 0.02em; }
+.calc-val { font-family: var(--font-body); font-size: 2.2rem; font-weight: 700; color: #fff; margin-top: 2px; overflow-x: auto; white-space: nowrap; }
+.calc-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.cb { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 4px; font-size: 1.2rem; font-weight: 600; color: var(--text); cursor: pointer; transition: all 0.1s; }
+.cb:hover { background: var(--border-hover); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+body.light-mode .cb:hover { border-color: rgba(0,0,0,0.1); }
+.cb:active { transform: translateY(1px); }
+.cb.op { color: var(--a1); background: rgba(79, 142, 247, 0.05); font-size: 1.3rem; }
+.cb.eq { background: linear-gradient(135deg, var(--a1), #2563eb); color: #fff; border-color: var(--a1); font-size: 1.3rem; box-shadow: 0 4px 15px rgba(79, 142, 247, 0.3); }
+.cb.eq:hover { box-shadow: 0 6px 20px rgba(79, 142, 247, 0.4); }
+.cb.clr { color: var(--gold); background: rgba(245, 158, 11, 0.05); }
+.cb.span2 { grid-column: span 2; }
+
+/* TIMER */
+.timer-face { text-align: center; background: #03050c; border: 1px solid var(--border); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); }
+.timer-ring { position: relative; width: 140px; height: 140px; }
+.timer-ring svg { transform: rotate(-90deg); width: 140px; height: 140px; }
+.timer-ring circle { transition: stroke-dashoffset 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.timer-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.timer-label { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+.timer-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.tmode { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: center; color: var(--muted); transition: all 0.2s; }
+.tmode.active, .tmode:hover { background: rgba(16, 185, 129, 0.08); border-color: var(--a4); color: var(--a4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); }
+.timer-btns { display: flex; gap: 12px; width: 100%; }
+.tbtn { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.tbtn.start { background: linear-gradient(135deg, var(--a4), #059669); border-color: var(--a4); color: #fff; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); }
+.tbtn:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+.tbtn:active { transform: translateY(0); }
+
+/* CHECKLIST & GENERAL TO-DOS */
+.hw-add { display: flex; gap: 12px; }
+.hw-add input { flex: 1; background: #03050c; border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; color: var(--text); font-family: var(--font-body); font-size: 0.95rem; outline: none; transition: all 0.2s; }
+.hw-add input:focus { border-color: var(--a2); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); }
+.hw-add button { background: linear-gradient(135deg, var(--a2), #6d28d9); border: none; border-radius: 14px; padding: 0 22px; color: #fff; font-size: 1.4rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2); }
+.hw-add button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(139, 92, 246, 0.3); }
+.hw-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.hw-item { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; transition: all 0.2s; animation: fadeUp 0.3s ease both; }
+.hw-item:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.02); }
+body.light-mode .hw-item:hover { background: #fff; }
+.hw-item.done { opacity: 0.45; }
+.hw-cb { width: 22px; height: 22px; border-radius: 7px; border: 2px solid rgba(255,255,255,0.15); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; transition: all 0.2s; }
+body.light-mode .hw-cb { border-color: rgba(0,0,0,0.15); }
+.hw-item:hover .hw-cb { border-color: var(--muted); }
+.hw-item.done .hw-cb { background: linear-gradient(135deg, var(--a2), #6d28d9); border-color: var(--a2); color: #fff; }
+.hw-text { flex: 1; font-size: 0.95rem; font-weight: 500; word-break: break-word; cursor: pointer; }
+.hw-item.done .hw-text { text-decoration: line-through; color: var(--muted); }
+.hw-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 4px; transition: color 0.2s; }
+.hw-del:hover { color: #f87171; }
+.hw-stats { font-size: 0.85rem; color: var(--muted); display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border); font-weight: 600; }
+.hw-clear { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; text-decoration: underline; font-family: var(--font-body); font-weight: 600; }
+.hw-clear:hover { color: var(--text); }
+
+/* NOTEPAD */
+.note-area { background: #03050c; border: 1px solid var(--border); border-radius: 16px; padding: 20px; color: var(--text); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; resize: vertical; min-height: 240px; outline: none; transition: all 0.2s; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); }
+.note-area:focus { border-color: var(--a3); box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); }
+.note-foot { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--muted); font-weight: 600; padding-top: 4px; }
+.note-actions { display: flex; gap: 10px; align-items: center; }
+.note-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 18px; color: var(--text); font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+.note-btn:hover { background: var(--border-hover); border-color: var(--muted); color: #fff; }
+.note-saved { color: var(--a4); opacity: 0; transition: opacity 0.3s; font-weight: 700; }
+.note-saved.show { opacity: 1; }
+
+/* UPGRADED UNIT CONVERTER STYLES */
+.converter-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .converter-grid { grid-template-columns: 1fr; } }
+.full-width { grid-column: span 3; }
+@media (max-width: 768px) { .full-width { grid-column: span 1; } }
+.input-group { display: flex; flex-direction: column; gap: 8px; }
+.input-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.input-group input, .input-group select { background: #03050c; border: 1px solid var(--border); border-radius: 14px; color: var(--text); padding: 14px 18px; font-family: inherit; font-size: 0.95rem; outline: none; transition: all 0.2s ease; }
+.input-group input:focus, .input-group select:focus { border-color: var(--a3); box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); }
+.result-box { margin-top: 8px; background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.2); border-radius: 16px; padding: 16px; text-align: center; }
+.result-display { font-family: var(--font-body); font-size: 1.6rem; font-weight: 700; color: var(--a3); word-break: break-all; margin-top: 4px; }
+
+/* FOOTER */
+footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 24px 0; border-top: 1px solid var(--border); margin-top: auto; opacity: 0.5; font-weight: 500; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.toast { position: fixed; bottom: 32px; right: 32px; background: linear-gradient(135deg, var(--a4), #059669); color: #fff; padding: 14px 28px; border-radius: 16px; font-size: 0.9rem; font-weight: 700; box-shadow: 0 15px 35px rgba(16, 185, 129, 0.35); transform: translateY(80px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 999; }
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div>
+
+<div class="wrap">
+
+  <nav>
+    <div class="nav-logo"><span class="dot"></span> Schul-Portal</div>
+    <div class="nav-right">
+      <div class="nav-clock">📅 <span id="ndate"></span><span class="tc" id="ntime"></span></div>
+      <button class="settings-btn" onclick="toggleSettings()" title="Design-Einstellungen">⚙️</button>
+      
+      <div class="settings-panel" id="settingsPanel">
+        <div class="settings-group">
+          <div class="settings-title">Modus</div>
+          <div class="settings-row">
+            <button class="st-btn theme-opt" id="t-dark" onclick="setTheme('dark')">🌙 Dunkel</button>
+            <button class="st-btn theme-opt" id="t-light" onclick="setTheme('light')">☀️ Hell</button>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-title">Farbschema</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button class="st-btn scheme-opt" id="s-default" onclick="setScheme('default')">🎨 Multi</button>
+            <button class="st-btn scheme-opt" id="s-cyber" onclick="setScheme('cyber')">🔮 Neon</button>
+            <button class="st-btn scheme-opt" id="s-ocean" onclick="setScheme('ocean')">🌊 Ozean</button>
+            <button class="st-btn scheme-opt" id="s-sunset" onclick="setScheme('sunset')">🌅 Sunset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Schul-Portal <span class="grad">Dashboard</span></h1>
+    <div class="navigator">
+      <button class="nav-tab active" onclick="switchMainTab('platforms', this)">🔗 Plattformen</button>
+      <button class="nav-tab" onclick="switchMainTab('tools-overview', this)">🧮 Werkzeuge</button>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <div id="platforms" class="page active">
+      <div class="pcards">
+        <a class="pcard card-1" href="https://www.lernsax.de/" target="_blank" rel="noopener">
+          <span class="ptag">Sachsen</span>
+          <div class="card-icon">📚</div>
+          <div class="card-title">LernSax</div>
+          <div class="card-desc">E-Mails, Aufgaben, Dateien und direkte Kommunikation für sächsische Schulen.</div>
+          <div class="card-foot"><span>lernsax.de</span><div class="arr">↗</div></div>
+        </a>
+
+        <a class="pcard card-2" href="https://beste.schule/login" target="_blank" rel="noopener">
+          <span class="ptag">Schule</span>
+          <div class="card-icon">🏫</div>
+          <div class="card-title">Beste Schule</div>
+          <div class="card-desc">Digitales Klassenbuch: Stundenpläne, Hausaufgaben und Noten smart verwalten.</div>
+          <div class="card-foot"><span>beste.schule</span><div class="arr">↗</div></div>
+        </a>
+
+        <a class="pcard card-3" href="https://schullogin.de/p/login" target="_blank" rel="noopener">
+          <span class="ptag">Zentral</span>
+          <div class="card-icon">🔑</div>
+          <div class="card-title">Schullogin</div>
+          <div class="card-desc">Zentraler, sicherer Zugang zu all deinen digitalen Lernmitteln und sächsischen Bildungs-Apps.</div>
+          <div class="card-foot"><span>schullogin.de</span><div class="arr">↗</div></div>
+        </a>
+
+        <a class="pcard card-4" href="https://notebooklm.google.com/" target="_blank" rel="noopener">
+          <span class="ptag">KI-Assistent</span>
+          <div class="card-icon">🎙️</div>
+          <div class="card-title">NotebookLM</div>
+          <div class="card-desc">KI-gestütztes Lernen: Lade Unterrichtsdokumente hoch und stelle intelligente Fragen.</div>
+          <div class="card-foot"><span>notebooklm.google.com</span><div class="arr">↗</div></div>
+        </a>
+      </div>
+    </div>
+
+    <div id="tools-overview" class="page">
+      <div class="tools-menu">
+        <div class="menu-card card-1" onclick="openTool('tool-calc')">
+          <div class="card-icon">🧮</div>
+          <div class="card-title">Taschenrechner</div>
+          <div class="card-desc">Schnelle und präzise Berechnungen für Mathe und Physik mit vollem Tastatur-Support.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+
+        <div class="menu-card card-4" onclick="openTool('tool-timer')">
+          <div class="card-icon">⏱️</div>
+          <div class="card-title">Lern-Timer</div>
+          <div class="card-desc">Fokus-Timer nach der Pomodoro-Methode mit vorgefertigten Lern- und Pausenzyklen.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+
+        <div class="menu-card card-3" onclick="openTool('tool-converter')">
+          <div class="card-icon">🔄</div>
+          <div class="card-title">Einheiten-Konverter</div>
+          <div class="card-desc">Umfassende Echtzeit-Umrechnung für Länge, Masse, Volumen, Temperatur, Speicher & mehr.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+
+        <div class="menu-card card-1" onclick="openTool('tool-grades')">
+          <div class="card-icon">📊</div>
+          <div class="card-title">Notendurchschnitt</div>
+          <div class="card-desc">Berechne deinen exakten Notenschnitt in Echtzeit mit optionaler Gewichtung.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+
+        <div class="menu-card card-2" onclick="openTool('tool-vocab')">
+          <div class="card-icon">🧠</div>
+          <div class="card-title">Vokabeltrainer</div>
+          <div class="card-desc">Erstelle eigene Listen und teste dich selbst im interaktiven Abfragesystem.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+
+        <div class="menu-card card-2" onclick="openTool('tool-hw')">
+          <div class="card-icon">✅</div>
+          <div class="card-title">Hausaufgaben</div>
+          <div class="card-desc">Deine To-Do-Liste direkt im Blick behalten. Schnell, übersichtlich und organisiert.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+
+        <div class="menu-card card-3" onclick="openTool('tool-note')">
+          <div class="card-icon">📝</div>
+          <div class="card-title">Notizblock</div>
+          <div class="card-desc">Gedanken, Vokabeln oder Formeln sofort digital festhalten. Speichert vollautomatisch.</div>
+          <div class="card-foot"><span>Tool öffnen</span><div class="arr">→</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-calc" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">🧮</span><h3>Taschenrechner</h3></div>
+          <div class="tool-body">
+            <div class="calc-display">
+              <div class="calc-expr" id="cexpr"></div>
+              <div class="calc-val" id="cval">0</div>
+            </div>
+            <div class="calc-btns">
+              <button class="cb clr" onclick="calcAct('C')">C</button>
+              <button class="cb op" onclick="calcAct('±')">±</button>
+              <button class="cb op" onclick="calcAct('%')">%</button>
+              <button class="cb op" onclick="calcAct('/')">÷</button>
+              <button class="cb" onclick="calcAct('7')">7</button>
+              <button class="cb" onclick="calcAct('8')">8</button>
+              <button class="cb" onclick="calcAct('9')">9</button>
+              <button class="cb op" onclick="calcAct('*')">×</button>
+              <button class="cb" onclick="calcAct('4')">4</button>
+              <button class="cb" onclick="calcAct('5')">5</button>
+              <button class="cb" onclick="calcAct('6')">6</button>
+              <button class="cb op" onclick="calcAct('-')">−</button>
+              <button class="cb" onclick="calcAct('1')">1</button>
+              <button class="cb" onclick="calcAct('2')">2</button>
+              <button class="cb" onclick="calcAct('3')">3</button>
+              <button class="cb op" onclick="calcAct('+')">+</button>
+              <button class="cb span2" onclick="calcAct('0')">0</button>
+              <button class="cb" onclick="calcAct('.')">.</button>
+              <button class="cb eq" onclick="calcAct('=')">=</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-timer" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">⏱️</span><h3>Lern-Timer</h3></div>
+          <div class="tool-body">
+            <div class="timer-face">
+              <div class="timer-ring">
+                <svg width="140" height="140" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="var(--border)" stroke-width="5"/>
+                  <circle id="tring" cx="50" cy="50" r="44" fill="none" stroke="var(--a4)" stroke-width="5" stroke-linecap="round" stroke-dasharray="276.46" stroke-dashoffset="0"/>
+                </svg>
+                <div class="timer-num" id="tdisp">25:00</div>
+              </div>
+              <div class="timer-label" id="tlabel">Fokus</div>
+            </div>
+            <div class="timer-modes">
+              <div class="tmode active" onclick="setMode(25,'Fokus',this)">🎯 25 min</div>
+              <div class="tmode" onclick="setMode(5,'Kurze Pause',this)">☕ 5 min</div>
+              <div class="tmode" onclick="setMode(15,'Lange Pause',this)">😴 15 min</div>
+            </div>
+            <div class="timer-btns">
+              <button class="tbtn start" id="tstart" onclick="toggleTimer()">▶ Start</button>
+              <button class="tbtn" onclick="resetTimer()">↺ Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-converter" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">🔄</span><h3>Einheiten-Konverter Pro</h3></div>
+          <div class="tool-body">
+            <div class="converter-grid">
+              <div class="input-group full-width">
+                <label for="conv-cat">Kategorie wählen</label>
+                <select id="conv-cat" onchange="initConverter()"></select>
+              </div>
+              
+              <div class="input-group">
+                <label for="conv-val">Wert</label>
+                <input type="number" id="conv-val" value="1" oninput="doConversion()" placeholder="Wert eingeben...">
+              </div>
+              
+              <div class="input-group">
+                <label for="conv-from">Von</label>
+                <select id="conv-from" onchange="doConversion()"></select>
+              </div>
+              
+              <div class="input-group">
+                <label for="conv-to">Nach</label>
+                <select id="conv-to" onchange="doConversion()"></select>
+              </div>
+              
+              <div class="input-group full-width result-box">
+                <label>Berechnetes Ergebnis</label>
+                <div id="conv-result" class="result-display">1.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-grades" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">📊</span><h3>Notendurchschnitt</h3></div>
+          <div class="tool-body">
+            <div class="result-box" style="background: rgba(79, 142, 247, 0.05); border-color: rgba(79, 142, 247, 0.2); display: flex; flex-direction: column; gap: 10px;">
+              <div>
+                <label style="color: var(--muted); font-size: 0.85rem;">Dein gewichteter Gesamtdurchschnitt</label>
+                <div id="grade-average-display" style="font-size: 2.5rem; font-weight: 800; color: var(--a1);">0.00</div>
+              </div>
+              <div style="display: flex; justify-content: space-around; font-size: 0.85rem; color: var(--muted); border-top: 1px dashed rgba(79, 142, 247, 0.2); padding-top: 8px;">
+                <span>Ø Klassenarbeiten: <strong id="avg-exam-display" style="color: var(--text);">-</strong></span>
+                <span>Ø Normale Noten: <strong id="avg-normal-display" style="color: var(--text);">-</strong></span>
+              </div>
+            </div>
+
+            <div class="settings-title" style="margin-top: 5px;">Globale Gewichtung einstellen</div>
+            <div class="converter-grid" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 10px;">
+              <div class="input-group">
+                <label>Klassenarbeiten (%)</label>
+                <input type="number" id="weight-exam-global" value="50" min="0" max="100" oninput="updateGlobalWeights('exam')">
+              </div>
+              <div class="input-group">
+                <label>Normale Noten (%)</label>
+                <input type="number" id="weight-normal-global" value="50" min="0" max="100" oninput="updateGlobalWeights('normal')">
+              </div>
+            </div>
+
+            <div class="converter-grid" style="grid-template-columns: 1fr 1fr auto; align-items: flex-end; margin-top: 10px;">
+              <div class="input-group">
+                <label>Note (1 - 6)</label>
+                <select id="grade-input">
+                  <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                  <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>Art der Note</label>
+                <select id="grade-type">
+                  <option value="normal">Normale Note</option>
+                  <option value="exam">Klassenarbeit</option>
+                </select>
+              </div>
+              <button onclick="addGrade()" style="background: linear-gradient(135deg, var(--a1), #2563eb); border: none; border-radius: 14px; color: #fff; padding: 14px 24px; font-weight: 700; cursor: pointer; height: 50px;">Hinzufügen</button>
+            </div>
+            <div class="hw-list" id="grades-list" style="margin-top: 10px;"></div>
+            <div class="hw-stats">
+              <span id="grades-count">0 Noten eingetragen</span>
+              <button class="hw-clear" onclick="clearGrades()">Alle löschen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-vocab" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">🧠</span><h3>Vokabeltrainer</h3></div>
+          <div class="tool-body">
+            <div id="vocab-practice-box" class="result-box" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2); min-height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;">
+              <div style="font-size: 0.85rem; color: var(--muted);">Abfrage (Deutsch → Übersetzung)</div>
+              <div id="vocab-question-word" style="font-size: 1.6rem; font-weight: 700; color: var(--a2);">Keine Vokabeln vorhanden</div>
+              <div id="vocab-feedback" style="font-size: 0.95rem; font-weight: 600; min-height: 22px;"></div>
+            </div>
+            
+            <div class="hw-add" id="vocab-answer-row">
+              <input type="text" id="vocab-answer-input" placeholder="Übersetzung eingeben..." onkeydown="if(event.key==='Enter')checkVocab()">
+              <button onclick="checkVocab()" style="background: linear-gradient(135deg, var(--a2), #6d28d9); font-size: 1rem; font-weight: 700;">Prüfen</button>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end;">
+              <button class="note-btn" id="vocab-next-btn" onclick="nextVocab()" style="display: none; background: var(--surface);">Nächste Vokabel ➔</button>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 10px 0;">
+            
+            <div class="settings-title">Neue Vokabel hinzufügen</div>
+            <div class="converter-grid" style="grid-template-columns: 1fr 1fr auto; align-items: flex-end;">
+              <div class="input-group">
+                <label>Deutsch</label>
+                <input type="text" id="vocab-de-input" placeholder="z.B. Schule">
+              </div>
+              <div class="input-group">
+                <label>Fremdsprache</label>
+                <input type="text" id="vocab-foreign-input" placeholder="z.B. school">
+              </div>
+              <button onclick="addVocab()" style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; color: var(--text); padding: 14px 20px; font-weight: 600; cursor: pointer; height: 50px;">+ Hinzufügen</button>
+            </div>
+            <div class="hw-stats">
+              <span id="vocab-stats-label">0 Vokabeln hinterlegt</span>
+              <button class="hw-clear" onclick="clearVocabList()">Liste leeren</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-hw" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">✅</span><h3>Hausaufgaben</h3></div>
+          <div class="tool-body">
+            <div class="hw-add">
+              <input type="text" id="hwinput" placeholder="Neue Aufgabe hinzufügen…" maxlength="80" onkeydown="if(event.key==='Enter')addHw()">
+              <button onclick="addHw()">+</button>
+            </div>
+            <div class="hw-list" id="hwlist"></div>
+            <div class="hw-stats">
+              <span id="hwstats">0 von 0 erledigt</span>
+              <button class="hw-clear" onclick="clearDone()">Erledigte entfernen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tool-note" class="page">
+      <div class="single-tool-container">
+        <button class="back-btn" onclick="backToToolsOverview()">← Zurück zur Übersicht</button>
+        <div class="tool-panel">
+          <div class="tool-header"><span class="th-icon">📝</span><h3>Notizblock</h3></div>
+          <div class="tool-body">
+            <textarea class="note-area" id="notearea" placeholder="Schreibe deine Gedanken auf... Deine Änderungen werden in Echtzeit lokal auf deinem Gerät gesichert."></textarea>
+            <div class="note-foot">
+              <span id="notecount">0 Zeichen</span>
+              <div class="note-actions">
+                <span class="note-saved" id="nsaved">✓ Auto-Save</span>
+                <button class="note-btn" onclick="copyNote()">📋 Kopieren</button>
+                <button class="note-btn" onclick="clearNote()">🗑 Löschen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Schul-Portal · Externe Links verweisen auf unabhängige Plattformen</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── NAVIGATION & ROUTING ── */
+function switchMainTab(pageId, buttonEl) {
+  const pages = document.querySelectorAll('.page');
+  pages.forEach(p => { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  
+  const targetPage = document.getElementById(pageId);
+  targetPage.classList.add('active');
+  
+  if(buttonEl) buttonEl.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openTool(toolId) {
+  switchMainTab(toolId, null);
+}
+
+function backToToolsOverview() {
+  switchMainTab('tools-overview', null);
+  document.querySelectorAll('.nav-tab')[1].classList.add('active');
+}
+
+/* ── LIVE CLOCK ── */
+function tick(){
+  const n=new Date();
+  const days=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const mos=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  document.getElementById('ndate').textContent=`${days[n.getDay()]}, ${n.getDate()}. ${mos[n.getMonth()]} `;
+  document.getElementById('ntime').textContent=n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+
+/* ── SETTINGS LOGIC ── */
+function toggleSettings() {
+  document.getElementById('settingsPanel').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('settingsPanel');
+  const btn = document.querySelector('.settings-btn');
+  if (panel.classList.contains('show') && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('show');
+  }
+});
+
+function setTheme(mode) {
+  document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('active'));
+  if (mode === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('t-light').classList.add('active');
+  } else {
+    document.body.classList.remove('light-mode');
+    document.getElementById('t-dark').classList.add('active');
+  }
+  localStorage.setItem('portal-mode', mode);
+}
+
+function setScheme(scheme) {
+  document.querySelectorAll('.scheme-opt').forEach(b => b.classList.remove('active'));
+  document.body.classList.remove('scheme-default', 'scheme-cyber', 'scheme-ocean', 'scheme-sunset');
+  document.body.classList.add('scheme-' + scheme);
+  document.getElementById('s-' + scheme).classList.add('active');
+  localStorage.setItem('portal-scheme', scheme);
+}
+
+const savedMode = localStorage.getItem('portal-mode') || 'dark';
+setTheme(savedMode);
+const savedScheme = localStorage.getItem('portal-scheme') || 'default';
+setScheme(savedScheme);
+
+/* ── TOAST MESSAGE SYSTEM ── */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ── INTERACTIVE CALCULATOR ENGINE ── */
+let cexp='', cres='0', fresh=false;
+function calcAct(v){
+  const ops=['+','-','*','/'];
+  if(v==='C'){cexp=''; cres='0'; fresh=false;}
+  else if(v==='='){
+    if(!cexp) return;
+    try{
+      const r=Function('"use strict";return ('+cexp+')')();
+      cres=parseFloat(r.toFixed(10)).toString();
+      document.getElementById('cexpr').textContent=cexp+' =';
+      document.getElementById('cval').textContent=cres;
+      cexp=''; fresh=true; return;
+    }catch{cres='Fehler'; fresh=true;}
+  }
+  else if(v==='±'){
+    if(cres!=='0') cres=(parseFloat(cres)*-1).toString();
+  }
+  else if(v==='%'){
+    if(cres!=='0') cres=(parseFloat(cres)/100).toString();
+  }
+  else if(ops.includes(v)){
+    if(fresh){cexp=cres+v; fresh=false;}
+    else{cexp+=v;}
+    cres='0';
+  }
+  else{
+    if(v==='.'&&cres.includes('.')) return;
+    if(fresh){cres=v; fresh=false;}
+    else{cres=cres==='0'&&v!='.'?v:cres+v;}
+    cexp+=v;
+  }
+  document.getElementById('cval').textContent=cres;
+  if(!['=','±','%'].includes(v)) document.getElementById('cexpr').textContent=cexp;
+}
+document.addEventListener('keydown',e=>{
+  if(document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+  if(!document.getElementById('tool-calc').classList.contains('active')) return;
+  const map={Enter:'=', Backspace:'C', Escape:'C', '+':'+', '-':'-', '*':'*', '/':'-'};
+  if(e.key>='0'&&e.key<='9') calcAct(e.key);
+  else if(e.key==='.') calcAct('.');
+  else if(map[e.key]) calcAct(map[e.key]);
+});
+
+/* ── POMODORO FOCUS TIMER ── */
+let tSecs=25*60, tTotal=25*60, tRunning=false, tInterval=null, tModeName='Fokus';
+const CIRC=276.46;
+function fmtTime(s){return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function renderTimer(){
+  document.getElementById('tdisp').textContent=fmtTime(tSecs);
+  document.getElementById('tlabel').textContent=tModeName;
+  const pct=tSecs/tTotal;
+  document.getElementById('tring').style.strokeDashoffset=CIRC*(1-pct);
+  const col=tSecs<=10?'#f87171':tSecs<=60?'#f59e0b':'var(--a4)';
+  document.getElementById('tring').style.stroke=col;
+}
+function toggleTimer(){
+  tRunning=!tRunning;
+  document.getElementById('tstart').textContent=tRunning?'⏸ Pause':'▶ Start';
+  document.getElementById('tstart').style.background=tRunning?'#f59e0b':'linear-gradient(135deg, var(--a4), #059669)';
+  if(tRunning){
+    tInterval=setInterval(()=>{
+      if(tSecs>0){tSecs--; renderTimer();}
+      else{clearInterval(tInterval); tRunning=false; toast('⏰ Zeit abgelaufen!'); document.getElementById('tstart').textContent='▶ Start'; document.getElementById('tstart').style.background='var(--a4)';}
+    },1000);
+  }else{clearInterval(tInterval);}
+}
+function resetTimer(){
+  clearInterval(tInterval); tRunning=false; tSecs=tTotal;
+  document.getElementById('tstart').textContent='▶ Start';
+  document.getElementById('tstart').style.background='linear-gradient(135deg, var(--a4), #059669)';
+  renderTimer();
+}
+function setMode(mins,label,el){
+  document.querySelectorAll('.tmode').forEach(m=>m.classList.remove('active'));
+  el.classList.add('active');
+  tTotal=mins*60; tModeName=label;
+  clearInterval(tInterval); tRunning=false; tSecs=tTotal;
+  document.getElementById('tstart').textContent='▶ Start';
+  document.getElementById('tstart').style.background='linear-gradient(135deg, var(--a4), #059669)';
+  renderTimer();
+}
+renderTimer();
+
+/* ── PERSISTENT HOMEWORK CHECKLIST ── */
+let hwItems=JSON.parse(localStorage.getItem('hw')||'[]');
+function saveHw(){localStorage.setItem('hw',JSON.stringify(hwItems))}
+function renderHw(){
+  const list=document.getElementById('hwlist');
+  list.innerHTML='';
+  hwItems.forEach((item,i)=>{
+    const d=document.createElement('div');
+    d.className='hw-item'+(item.done?' done':'');
+    d.innerHTML=`<div class="hw-cb" onclick="toggleHw(${i})">${item.done?'✓':''}</div>
+      <span class="hw-text" onclick="toggleHw(${i})">${item.text}</span>
+      <button class="hw-del" onclick="delHw(${i})">✕</button>`;
+    list.appendChild(d);
+  });
+  const done=hwItems.filter(x=>x.done).length;
+  document.getElementById('hwstats').textContent=`${done} von ${hwItems.length} erledigt`;
+}
+function addHw(){
+  const v=document.getElementById('hwinput').value.trim();
+  if(!v) return;
+  hwItems.push({text:v, done:false});
+  document.getElementById('hwinput').value='';
+  saveHw(); renderHw();
+}
+function toggleHw(i){hwItems[i].done=!hwItems[i].done; saveHw(); renderHw();}
+function delHw(i){hwItems.splice(i,1); saveHw(); renderHw();}
+function clearDone(){hwItems=hwItems.filter(x=>!x.done); saveHw(); renderHw();}
+renderHw();
+
+/* ── AUTO-SAVING NOTEPAD ── */
+const na=document.getElementById('notearea');
+na.value=localStorage.getItem('note')||'';
+function updateNoteCount(){document.getElementById('notecount').textContent=na.value.length+' Zeichen';}
+updateNoteCount();
+let nsTimer=null;
+na.addEventListener('input',()=>{
+  updateNoteCount();
+  clearTimeout(nsTimer);
+  nsTimer=setTimeout(()=>{
+    localStorage.setItem('note',na.value);
+    const s=document.getElementById('nsaved');
+    s.classList.add('show');
+    setTimeout(()=>s.classList.remove('show'), 1500);
+  }, 600);
+});
+function copyNote(){navigator.clipboard.writeText(na.value).then(()=>toast('📋 In Zwischenablage kopiert'));}
+function clearNote(){if(confirm('Möchtest du alle Notizen unwiderruflich löschen?')){na.value=''; localStorage.removeItem('note'); updateNoteCount();}}
+
+/* ── ENHANCED UNIT CONVERTER LOGIC ── */
+const unitData = {
+  length: {
+    label: '📏 Länge',
+    units: { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.344 },
+    labels: { mm: 'Millimeter (mm)', cm: 'Zentimeter (cm)', m: 'Meter (m)', km: 'Kilometer (km)', in: 'Zoll / Inch (in)', ft: 'Fuß (ft)', yd: 'Yard (yd)', mi: 'Meile (mi)' }
+  },
+  mass: {
+    label: '⚖️ Gewicht / Masse',
+    units: { mg: 0.000001, g: 0.001, kg: 1, t: 1000, oz: 0.0283495, lb: 0.453592 },
+    labels: { mg: 'Milligramm (mg)', g: 'Gramm (g)', kg: 'Kilogramm (kg)', t: 'Tonne (t)', oz: 'Unze (oz)', lb: 'Pfund (lb)' }
+  },
+  area: {
+    label: '📐 Fläche',
+    units: { mm2: 0.000001, cm2: 0.0001, m2: 1, ha: 10000, km2: 1000000, in2: 0.00064516, ft2: 0.092903, ac: 4046.86 },
+    labels: { mm2: 'Quadratmillimeter (mm²)', cm2: 'Quadratzentimeter (cm²)', m2: 'Quadratmeter (m²)', ha: 'Hektar (ha)', km2: 'Quadratkilometer (km²)', in2: 'Quadratzoll (in²)', ft2: 'Quadratfuß (ft²)', ac: 'Acre (ac)' }
+  },
+  volume: {
+    label: '🧪 Volumen',
+    units: { ml: 0.001, l: 1, m3: 1000, tsp: 0.00000492892, tbsp: 0.000014787, cup: 0.00024, floz: 0.000029574, pt: 0.000473176, qt: 0.000946353, gal: 0.00378541 },
+    labels: { ml: 'Milliliter (ml)', l: 'Liter (l)', m3: 'Kubikmeter (m³)', tsp: 'Teelöffel (tsp)', tbsp: 'Esslöffel (tbsp)', cup: 'Cup / Tasse', floz: 'Flüssigunze (fl oz)', pt: 'Pinte (pt)', qt: 'Quart (qt)', gal: 'Gallone (gal)' }
+  },
+  temperature: {
+    label: '🌡️ Temperatur',
+    isSpecial: true,
+    units: ['C', 'F', 'K'],
+    labels: { C: 'Celsius (°C)', F: 'Fahrenheit (°F)', K: 'Kelvin (K)' },
+    convert: (val, from, to) => {
+      let c;
+      if (from === 'C') c = val;
+      else if (from === 'F') c = (val - 32) * 5/9;
+      else if (from === 'K') c = val - 273.15;
+      
+      if (to === 'C') return c;
+      else if (to === 'F') return (c * 9/5) + 32;
+      else if (to === 'K') return c + 273.15;
+      return val;
+    }
+  },
+  time: {
+    label: '⏱️ Zeit',
+    units: { ms: 0.001, s: 1, min: 60, h: 3600, d: 86400, w: 604800, y: 31536000 },
+    labels: { ms: 'Millisekunden (ms)', s: 'Sekunden (s)', min: 'Minuten (min)', h: 'Stunden (h)', d: 'Tage (d)', w: 'Wochen (w)', y: 'Jahre (y)' }
+  },
+  speed: {
+    label: '🚀 Geschwindigkeit',
+    units: { m_s: 1, km_h: 0.277778, mph: 0.44704, knots: 0.514444 },
+    labels: { m_s: 'Meter/Sekunde (m/s)', km_h: 'Kilometer/Stunde (km/h)', mph: 'Meilen/Stunde (mph)', knots: 'Knoten (kn)' }
+  },
+  digital: {
+    label: '💾 Digitaler Speicher',
+    units: { B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776 },
+    labels: { B: 'Bytes (B)', KB: 'Kilobytes (KB)', MB: 'Megabytes (MB)', GB: 'Gigabytes (GB)', TB: 'Terabytes (TB)' }
+  }
+};
+
+function setupConverterUI() {
+  const catSelect = document.getElementById('conv-cat');
+  catSelect.innerHTML = '';
+  Object.keys(unitData).forEach(key => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = unitData[key].label;
+    catSelect.appendChild(opt);
+  });
+  initConverter();
+}
+
+function initConverter() {
+  const cat = document.getElementById('conv-cat').value;
+  const fromSelect = document.getElementById('conv-from');
+  const toSelect = document.getElementById('conv-to');
+  fromSelect.innerHTML = ''; toSelect.innerHTML = '';
+  
+  const data = unitData[cat];
+  const keys = data.isSpecial ? data.units : Object.keys(data.units);
+  
+  keys.forEach((key, index) => {
+    const optFrom = document.createElement('option');
+    optFrom.value = key; optFrom.textContent = data.labels[key];
+    fromSelect.appendChild(optFrom);
+    
+    const optTo = document.createElement('option');
+    optTo.value = key; optTo.textContent = data.labels[key];
+    if(index === 1) optTo.selected = true;
+    toSelect.appendChild(optTo);
+  });
+  doConversion();
+}
+
+function doConversion() {
+  const cat = document.getElementById('conv-cat').value;
+  const val = parseFloat(document.getElementById('conv-val').value);
+  const from = document.getElementById('conv-from').value;
+  const to = document.getElementById('conv-to').value;
+  const resultDiv = document.getElementById('conv-result');
+  
+  if (isNaN(val)) {
+    resultDiv.textContent = 'Bitte Zahl eingeben';
+    return;
+  }
+  
+  const data = unitData[cat];
+  let result;
+  if (data.isSpecial) {
+    result = data.convert(val, from, to);
+  } else {
+    const valueInBase = val * data.units[from];
+    result = valueInBase / data.units[to];
+  }
+  
+  if (result % 1 === 0) {
+    resultDiv.textContent = `${result.toLocaleString('de-DE')} ${to}`;
+  } else {
+    resultDiv.textContent = `${Number(result.toFixed(6)).toLocaleString('de-DE')} ${to}`;
+  }
+}
+
+/* ── WEIGHTED GRADE AVERAGE LOGIC ── */
+let gradeItems = JSON.parse(localStorage.getItem('portal-grades') || '[]');
+let globalWeightExam = parseFloat(localStorage.getItem('portal-w-exam')) || 50;
+let globalWeightNormal = parseFloat(localStorage.getItem('portal-w-normal')) || 50;
+
+function saveGrades() { localStorage.setItem('portal-grades', JSON.stringify(gradeItems)); }
+
+function updateGlobalWeights(changed) {
+  const examInput = document.getElementById('weight-exam-global');
+  const normalInput = document.getElementById('weight-normal-global');
+  let examW = parseFloat(examInput.value) || 0;
+  let normalW = parseFloat(normalInput.value) || 0;
+  
+  if (changed === 'exam') {
+    normalW = Math.max(0, 100 - examW);
+    normalInput.value = normalW;
+  } else {
+    examW = Math.max(0, 100 - normalW);
+    examInput.value = examW;
+  }
+  
+  globalWeightExam = examW;
+  globalWeightNormal = normalW;
+  localStorage.setItem('portal-w-exam', examW);
+  localStorage.setItem('portal-w-normal', normalW);
+  renderGrades();
+}
+
+function renderGrades() {
+  const list = document.getElementById('grades-list');
+  list.innerHTML = '';
+  
+  if(document.getElementById('weight-exam-global')) {
+    document.getElementById('weight-exam-global').value = globalWeightExam;
+    document.getElementById('weight-normal-global').value = globalWeightNormal;
+  }
+
+  let examGrades = [];
+  let normalGrades = [];
+
+  gradeItems.forEach((item, i) => {
+    // Falls noch alte Datenstrukturen existieren, fangen wir das hier ab
+    if (!item.type) {
+      item.type = (item.weight === 2) ? 'exam' : 'normal';
+    }
+
+    const d = document.createElement('div');
+    d.className = 'hw-item';
+    const typeLabel = item.type === 'exam' ? 'Klassenarbeit' : 'Normale Note';
+    const badgeColor = item.type === 'exam' ? 'var(--a2)' : 'var(--a1)';
+    
+    d.innerHTML = `
+      <div class="hw-cb" style="background: ${badgeColor}; border-color: ${badgeColor}; color: #fff; font-size: 0.9rem;">${item.grade}</div>
+      <span class="hw-text">Art: ${typeLabel}</span>
+      <button class="hw-del" onclick="delGrade(${i})">✕</button>
+    `;
+    list.appendChild(d);
+
+    if (item.type === 'exam') {
+      examGrades.push(item.grade);
+    } else {
+      normalGrades.push(item.grade);
+    }
+  });
+
+  const examSum = examGrades.reduce((a, b) => a + b, 0);
+  const normalSum = normalGrades.reduce((a, b) => a + b, 0);
+
+  const examAvg = examGrades.length > 0 ? examSum / examGrades.length : 0;
+  const normalAvg = normalGrades.length > 0 ? normalSum / normalGrades.length : 0;
+
+  document.getElementById('avg-exam-display').textContent = examGrades.length > 0 ? examAvg.toFixed(2) : '-';
+  document.getElementById('avg-normal-display').textContent = normalGrades.length > 0 ? normalAvg.toFixed(2) : '-';
+
+  let average = 0;
+  if (examGrades.length > 0 && normalGrades.length > 0) {
+    const totalWeight = globalWeightExam + globalWeightNormal;
+    if (totalWeight > 0) {
+      average = (examAvg * globalWeightExam + normalAvg * globalWeightNormal) / totalWeight;
+    }
+  } else if (examGrades.length > 0) {
+    average = examAvg;
+  } else if (normalGrades.length > 0) {
+    average = normalAvg;
+  }
+
+  document.getElementById('grade-average-display').textContent = average > 0 ? average.toFixed(2) : '0.00';
+  document.getElementById('grades-count').textContent = `${gradeItems.length} Noten eingetragen`;
+}
+
+function addGrade() {
+  const grade = parseInt(document.getElementById('grade-input').value);
+  const type = document.getElementById('grade-type').value;
+  gradeItems.push({ grade, type });
+  saveGrades(); renderGrades();
+  toast('Note hinzugefügt!');
+}
+
+function delGrade(i) {
+  gradeItems.splice(i, 1);
+  saveGrades(); renderGrades();
+}
+
+function clearGrades() {
+  if(confirm('Möchtest du alle eingetragenen Noten unwiderruflich löschen?')) {
+    gradeItems = []; saveGrades(); renderGrades();
+  }
+}
+
+/* ── SMART VOCABULARY TRAINER ENGINE ── */
+let vocabItems = JSON.parse(localStorage.getItem('portal-vocab') || '[]');
+let currentVocabIndex = -1;
+function saveVocab() { localStorage.setItem('portal-vocab', JSON.stringify(vocabItems)); }
+function updateVocabUI() {
+  document.getElementById('vocab-stats-label').textContent = `${vocabItems.length} Vokabeln hinterlegt`;
+  const row = document.getElementById('vocab-answer-row');
+  if(vocabItems.length === 0) {
+    document.getElementById('vocab-question-word').textContent = 'Keine Vokabeln vorhanden';
+    document.getElementById('vocab-feedback').textContent = 'Füge unten Vokabeln hinzu, um das Training zu starten.';
+    row.style.display = 'none';
+    document.getElementById('vocab-next-btn').style.display = 'none';
+    currentVocabIndex = -1;
+  } else {
+    row.style.display = 'flex';
+    if(currentVocabIndex === -1) nextVocab();
+  }
+}
+function addVocab() {
+  const de = document.getElementById('vocab-de-input').value.trim();
+  const foreign = document.getElementById('vocab-foreign-input').value.trim();
+  if(!de || !foreign) { toast('Bitte fülle beide Textfelder aus!'); return; }
+  vocabItems.push({ de, foreign });
+  saveVocab();
+  document.getElementById('vocab-de-input').value = '';
+  document.getElementById('vocab-foreign-input').value = '';
+  toast('Vokabel gesichert!');
+  updateVocabUI();
+}
+function nextVocab() {
+  if(vocabItems.length === 0) return;
+  currentVocabIndex = Math.floor(Math.random() * vocabItems.length);
+  document.getElementById('vocab-question-word').textContent = vocabItems[currentVocabIndex].de;
+  document.getElementById('vocab-feedback').textContent = '';
+  document.getElementById('vocab-answer-input').value = '';
+  document.getElementById('vocab-answer-input').disabled = false;
+  document.getElementById('vocab-next-btn').style.display = 'none';
+}
+function checkVocab() {
+  if(currentVocabIndex === -1 || vocabItems.length === 0) return;
+  const userAns = document.getElementById('vocab-answer-input').value.trim().toLowerCase();
+  const correctAns = vocabItems[currentVocabIndex].foreign.trim().toLowerCase();
+  const fb = document.getElementById('vocab-feedback');
+  
+  if(userAns === correctAns) {
+    fb.textContent = 'Richtig! Ausgezeichnet 🎉';
+    fb.style.color = 'var(--a4)';
+  } else {
+    fb.textContent = `Falsch. Richtig ist: ${vocabItems[currentVocabIndex].foreign}`;
+    fb.style.color = '#f87171';
+  }
+  document.getElementById('vocab-answer-input').disabled = true;
+  document.getElementById('vocab-next-btn').style.display = 'inline-block';
+}
+function clearVocabList() {
+  if(confirm('Möchtest du die gesamte Vokabelliste unwiderruflich leeren?')) {
+    vocabItems = []; saveVocab(); updateVocabUI();
+  }
+}
+
+/* ── APPLOADING CORE INITIALIZER ── */
+document.addEventListener('DOMContentLoaded', () => {
+  setupConverterUI();
+  renderGrades();
+  updateVocabUI();
+});
+</script>
+</body>
+</html>
